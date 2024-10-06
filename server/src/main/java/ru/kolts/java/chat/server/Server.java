@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Server {
     private int port;
@@ -38,6 +39,15 @@ public class Server {
     public synchronized void broadcastMessage(String message) {
         for (ClientHandler client : clients) {
             client.sendMessage(message);
+        }
+    }
+
+    public synchronized void msgClientToClient(String name, String message) {
+        for (ClientHandler client : clients) {
+            if (client.getUsername().equals(name)){
+                client.sendMessage(message);
+                break;
+            }
         }
     }
 }

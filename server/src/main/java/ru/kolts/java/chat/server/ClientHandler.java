@@ -18,6 +18,10 @@ public class ClientHandler {
         return username;
     }
 
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public ClientHandler(Server server, Socket socket) throws IOException {
         this.server = server;
         this.socket = socket;
@@ -28,14 +32,16 @@ public class ClientHandler {
         new Thread(() -> {
             try {
                 System.out.println("Клиент подключился ");
+                sendMessage("Type \"/help\" to get list of commands");
                 while (true) {
                     String message = in.readUTF();
                     if (message.startsWith("/")) {
-                        if (message.startsWith("/exit")){
+                        if (message.equals("/exit")) {
                             sendMessage("/exitok");
                             break;
                         }
-                        
+
+                        processCommands(message);
 
                     } else {
                         server.broadcastMessage(username + " : " + message);
@@ -57,7 +63,7 @@ public class ClientHandler {
         }
     }
 
-    public void disconnect(){
+    public void disconnect() {
         server.unsubscribe(this);
         try {
             in.close();
@@ -73,6 +79,29 @@ public class ClientHandler {
             socket.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void processCommands(String message){
+        if (message.startsWith("/w ")) {
+            String[] parts = message.split(" ", 3);
+            server.msgClientToClient(parts[1], username + " : " + parts[2].trim());
+        }
+
+        if (message.startsWith("/changename ")) {
+            String[] parts = message.replaceAll("\\s{2,}", " ").split(" ");
+            setUsername(parts[1]);
+        }
+
+        if (message.equals("/name")) {
+            sendMessage(getUsername());
+        }
+
+        if (message.equals("/help")) {
+            sendMessage("\n\"/w `name` `message`\" - send message to another client" +
+                    "\n\"/changename `name`\" - change name" +
+                    "\n\"/name\" - check name" +
+                    "\n\"/exit\" - exit client");
         }
     }
 }
