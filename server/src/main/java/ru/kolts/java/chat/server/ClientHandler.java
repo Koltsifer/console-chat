@@ -42,10 +42,18 @@ public class ClientHandler {
                             sendMessage("/exitok");
                             break;
                         }
-                        sendPrivateMessage(message);
-                        changeName(message);
-                        sendUsername(message);
-                        listCommands(message);
+                        if (message.startsWith("/w")) {
+                            sendPrivateMessage(message, "/w");
+                        }
+                        if (message.startsWith("/changename")) {
+                            changeName(message, "/changename");
+                        }
+                        if (message.equals("/name")) {
+                            sendMessage(getUsername());
+                        }
+                        if (message.equals("/help")) {
+                            listCommands();
+                        }
                     } else {
                         server.broadcastMessage(username + " : " + message);
                     }
@@ -85,50 +93,37 @@ public class ClientHandler {
         }
     }
 
-    public void listCommands(String message) {
-        if (message.equals("/help")) {
-            sendMessage("\n\"/w [name] [message]\" - send message to another client" +
-                    "\n\"/changename [name]\" - change name" +
-                    "\n\"/name\" - check name" +
-                    "\n\"/exit\" - exit client");
-        }
+    public void listCommands() {
+        sendMessage("\n\"/w [name] [message]\" - send message to another client" +
+                "\n\"/changename [name]\" - change name" +
+                "\n\"/name\" - check name" +
+                "\n\"/exit\" - exit client");
     }
 
-    public void sendUsername(String message) {
-        if (message.equals("/name")) {
-            sendMessage(getUsername());
-        }
-
-    }
-
-    public void sendPrivateMessage(String message) {
-        if (message.startsWith("/w")) {
+    public void sendPrivateMessage(String message, String command) {
             String[] parts = message.trim().split(" ", 3);
-            if (!parts[0].equals("/w") || parts.length != 3 || !nameExists(parts[1].trim())) {
-                sendMessage("Fail. Use: /w [username] [message]");
+            if (!parts[0].equals(command) || parts.length != 3 || !nameExists(parts[1].trim())) {
+                sendMessage("Fail. Use: " + command + " [username] [message]");
                 return;
             }
             String name = parts[1].trim();
             String privateMessage = parts[2].trim();
             server.msgClientToClient(name, username + " : " + privateMessage);
-        }
     }
 
-    public void changeName(String message) {
-        if (message.startsWith("/changename")) {
-            String[] parts = message.replaceAll("\\s{2,}", " ").split(" ");
-            if (!parts[0].equals("/changename") || parts.length != 2) {
-                sendMessage("Fail. Use: /changename [name]");
-                return;
-            }
-            String newName = parts.length == 2 ? parts[1].trim() : "";
-            if (newName.isEmpty() || nameExists(newName)) {
-                sendMessage("Fail. Use: /changename [name]");
-                return;
-            }
-            setUsername(newName);
-            sendMessage("Success");
+    public void changeName(String message, String command) {
+        String[] parts = message.replaceAll("\\s{2,}", " ").split(" ");
+        if (!parts[0].equals(command) || parts.length != 2) {
+            sendMessage("Fail. Use: " + command + " [name]");
+            return;
         }
+        String newName = parts[1].trim();
+        if (newName.isEmpty() || nameExists(newName)) {
+            sendMessage("Fail. Use: " + command + " [name]");
+            return;
+        }
+        setUsername(newName);
+        sendMessage("Success");
     }
 
     public boolean nameExists(String username) {
