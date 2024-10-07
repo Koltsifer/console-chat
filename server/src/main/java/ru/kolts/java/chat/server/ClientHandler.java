@@ -29,7 +29,7 @@ public class ClientHandler {
         this.out = new DataOutputStream(socket.getOutputStream());
         do {
             userCount++;
-        } while (nameIsTaken("user" + userCount));
+        } while (isNameTaken("user" + userCount));
         username = "user" + userCount;
         new Thread(() -> {
             try {
@@ -86,17 +86,29 @@ public class ClientHandler {
 
     public void processCommands(String message) {
         if (message.startsWith("/w ")) {
-            String[] parts = message.split(" ", 3);
-            server.msgClientToClient(parts[1], username + " : " + parts[2].trim());
+            String[] parts = message.trim().split(" ", 3);
+            String name = parts.length > 1 ? parts[1].trim() : "";
+            String privateMessage = parts.length > 2 ? parts[2].trim() : "";
+            if (name.isEmpty() || privateMessage.isEmpty() || !isNameTaken(name)) {
+                sendMessage("Fail. Use: /w [username] [message]");
+                return;
+            }
+            server.msgClientToClient(name, username + " : " + privateMessage);
         }
 
         if (message.startsWith("/changename ")) {
-            String newName = (message.replaceAll("\\s{2,}", " ").split(" "))[1];
-            if (nameIsTaken(newName)) {
+            String[] parts = message.replaceAll("\\s{2,}", " ").split(" ");
+            if (parts.length < 1) {
+                sendMessage("Fail. Use: /changename [name]");
+                return;
+            }
+            String newName = parts[1];
+            if (isNameTaken(newName)) {
                 sendMessage("Username already taken");
                 return;
             }
             setUsername(newName);
+            sendMessage("Success");
         }
 
         if (message.equals("/name")) {
@@ -104,14 +116,14 @@ public class ClientHandler {
         }
 
         if (message.equals("/help")) {
-            sendMessage("\n\"/w `name` `message`\" - send message to another client" +
-                    "\n\"/changename `name`\" - change name" +
+            sendMessage("\n\"/w [name] [message]\" - send message to another client" +
+                    "\n\"/changename [name]\" - change name" +
                     "\n\"/name\" - check name" +
                     "\n\"/exit\" - exit client");
         }
     }
 
-    public boolean nameIsTaken(String username) {
+    public boolean isNameTaken(String username) {
         for (ClientHandler client : server.getClients()) {
             if (client.getUsername().equals(username)) {
                 return true;
