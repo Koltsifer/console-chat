@@ -82,15 +82,21 @@ public class ClientHandler {
         }
     }
 
-    public void processCommands(String message){
+    public void processCommands(String message) {
         if (message.startsWith("/w ")) {
             String[] parts = message.split(" ", 3);
             server.msgClientToClient(parts[1], username + " : " + parts[2].trim());
         }
 
         if (message.startsWith("/changename ")) {
-            String[] parts = message.replaceAll("\\s{2,}", " ").split(" ");
-            setUsername(parts[1]);
+            String newName = (message.replaceAll("\\s{2,}", " ").split(" "))[1];
+            for (ClientHandler client : server.getClients()) {
+                if (client.getUsername().equals(newName)) {
+                    sendMessage("UserName already taken");
+                    return;
+                }
+            }
+            setUsername(newName);
         }
 
         if (message.equals("/name")) {
