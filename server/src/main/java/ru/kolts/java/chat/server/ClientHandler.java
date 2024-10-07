@@ -33,7 +33,7 @@ public class ClientHandler {
         username = "user" + userCount;
         new Thread(() -> {
             try {
-                System.out.println("Клиент подключился ");
+                System.out.println("Client connected ");
                 sendMessage("Type \"/help\" to get list of commands");
                 while (true) {
                     String message = in.readUTF();
