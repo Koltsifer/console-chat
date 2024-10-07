@@ -27,7 +27,9 @@ public class ClientHandler {
         this.socket = socket;
         this.in = new DataInputStream(socket.getInputStream());
         this.out = new DataOutputStream(socket.getOutputStream());
-        userCount++;
+        do {
+            userCount++;
+        } while (nameIsTaken("user" + userCount));
         username = "user" + userCount;
         new Thread(() -> {
             try {
@@ -90,11 +92,9 @@ public class ClientHandler {
 
         if (message.startsWith("/changename ")) {
             String newName = (message.replaceAll("\\s{2,}", " ").split(" "))[1];
-            for (ClientHandler client : server.getClients()) {
-                if (client.getUsername().equals(newName)) {
-                    sendMessage("UserName already taken");
-                    return;
-                }
+            if (nameIsTaken(newName)) {
+                sendMessage("Username already taken");
+                return;
             }
             setUsername(newName);
         }
@@ -109,5 +109,14 @@ public class ClientHandler {
                     "\n\"/name\" - check name" +
                     "\n\"/exit\" - exit client");
         }
+    }
+
+    public boolean nameIsTaken(String username) {
+        for (ClientHandler client : server.getClients()) {
+            if (client.getUsername().equals(username)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
