@@ -29,7 +29,7 @@ public class ClientHandler {
         this.out = new DataOutputStream(socket.getOutputStream());
         do {
             userCount++;
-        } while (isNameTaken("user" + userCount));
+        } while (nameExists("user" + userCount));
         username = "user" + userCount;
         new Thread(() -> {
             try {
@@ -89,7 +89,7 @@ public class ClientHandler {
             String[] parts = message.trim().split(" ", 3);
             String name = parts.length > 1 ? parts[1].trim() : "";
             String privateMessage = parts.length > 2 ? parts[2].trim() : "";
-            if (name.isEmpty() || privateMessage.isEmpty() || !isNameTaken(name)) {
+            if (name.isEmpty() || privateMessage.isEmpty() || !nameExists(name)) {
                 sendMessage("Fail. Use: /w [username] [message]");
                 return;
             }
@@ -103,7 +103,7 @@ public class ClientHandler {
                 return;
             }
             String newName = parts[1];
-            if (isNameTaken(newName)) {
+            if (nameExists(newName)) {
                 sendMessage("Username already taken");
                 return;
             }
@@ -123,7 +123,7 @@ public class ClientHandler {
         }
     }
 
-    public boolean isNameTaken(String username) {
+    public boolean nameExists(String username) {
         for (ClientHandler client : server.getClients()) {
             if (client.getUsername().equals(username)) {
                 return true;
