@@ -82,9 +82,6 @@ public class ClientHandler {
                             sendMessage("/exitok");
                             break;
                         }
-                        if (message.startsWith("/changerole ") && message.split(" ").length == 2){
-
-                        }
                         if (message.startsWith("/w")) {
                             sendPrivateMessage(message, "/w");
                         }
