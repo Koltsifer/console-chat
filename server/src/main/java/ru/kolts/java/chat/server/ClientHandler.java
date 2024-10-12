@@ -12,6 +12,7 @@ public class ClientHandler {
     private DataOutputStream out;
 
     private String username;
+    private Role role;
 
     public String getUsername() {
         return username;
@@ -48,6 +49,7 @@ public class ClientHandler {
                             }
                             if (server.getAuthenticatedProvider()
                                     .authenticate(this, elements[1], elements[2])) {
+                                role = server.getAuthenticatedProvider().getPermission(elements[1], elements[2]);
                                 break;
                             }
                             continue;
@@ -80,6 +82,9 @@ public class ClientHandler {
                             sendMessage("/exitok");
                             break;
                         }
+                        if (message.startsWith("/changerole ") && message.split(" ").length == 2){
+
+                        }
                         if (message.startsWith("/w")) {
                             sendPrivateMessage(message, "/w");
                         }
@@ -89,6 +94,21 @@ public class ClientHandler {
                         if (message.equals("/help")) {
                             listCommands();
                         }
+                        if (message.startsWith("/kick") ) {
+                            String[] elements = message.split(" ");
+                            if (elements.length != 2) {
+                                sendMessage("Fail. Use: /kick [username]");
+                                continue;
+                            }
+                            if (role == Role.ADMIN) {
+                                if(!server.kickUser(elements[1])){
+                                    sendMessage("User not founds");
+                                }
+                            }else{
+                                sendMessage("Not enough permissions");
+                            }
+                        }
+
                     } else {
                         server.broadcastMessage(username + " : " + message);
                     }

@@ -67,4 +67,15 @@ public class Server {
             }
         }
     }
+
+    public boolean kickUser(String username){
+        for (ClientHandler client : clients) {
+            if (client.getUsername() != null && client.getUsername().equals(username)){
+                client.sendMessage("You are removed from the chat");
+                client.sendMessage("/exitonkick");
+                return true;
+            }
+        }
+        return false;
+    }
 }
