@@ -12,7 +12,6 @@ public class ClientHandler {
     private DataOutputStream out;
 
     private String username;
-    private static int userCount = 0;
 
     public String getUsername() {
         return username;
@@ -27,13 +26,52 @@ public class ClientHandler {
         this.socket = socket;
         this.in = new DataInputStream(socket.getInputStream());
         this.out = new DataOutputStream(socket.getOutputStream());
-        do {
-            userCount++;
-        } while (nameExists("user" + userCount));
-        username = "user" + userCount;
         new Thread(() -> {
             try {
-                System.out.println("Client connected ");
+                System.out.println("Клиент подключился ");
+                //цикл аутентификации
+                sendMessage("Перед работой необходимо пройти аутентификацию командой " +
+                        "/auth login password или регистрацию командой /reg login password username");
+                while (true) {
+                    String message = in.readUTF();
+                    if (message.startsWith("/")) {
+                        if (message.startsWith("/exit")) {
+                            sendMessage("/exitok");
+                            break;
+                        }
+                        // /auth login password
+                        if (message.startsWith("/auth ")) {
+                            String[] elements = message.split(" ");
+                            if (elements.length != 3) {
+                                sendMessage("Неверный формат команды /auth ");
+                                continue;
+                            }
+                            if (server.getAuthenticatedProvider()
+                                    .authenticate(this, elements[1], elements[2])) {
+                                break;
+                            }
+                            continue;
+                        }
+                        // /reg login password username
+                        if (message.startsWith("/reg ")) {
+                            String[] elements = message.split(" ");
+                            if (elements.length != 4) {
+                                sendMessage("Неверный формат команды /reg ");
+                                continue;
+                            }
+                            if (server.getAuthenticatedProvider()
+                                    .registration(this, elements[1], elements[2], elements[3])) {
+                                break;
+                            }
+                            continue;
+                        }
+                    }
+                    sendMessage("Перед работой необходимо пройти аутентификацию командой " +
+                            "/auth login password или регистрацию командой /reg login password username");
+                }
+                System.out.println("Клиент " + username + " успешно прошел аутентификацию");
+
+                //Цилк работы
                 sendMessage("Type \"/help\" to get list of commands");
                 while (true) {
                     String message = in.readUTF();
@@ -44,9 +82,6 @@ public class ClientHandler {
                         }
                         if (message.startsWith("/w")) {
                             sendPrivateMessage(message, "/w");
-                        }
-                        if (message.startsWith("/changename")) {
-                            changeName(message, "/changename");
                         }
                         if (message.equals("/name")) {
                             sendMessage(getUsername());
@@ -95,43 +130,17 @@ public class ClientHandler {
 
     public void listCommands() {
         sendMessage("\n\"/w [name] [message]\" - send message to another client" +
-                "\n\"/changename [name]\" - change name" +
-                "\n\"/name\" - check name" +
                 "\n\"/exit\" - exit client");
     }
 
     public void sendPrivateMessage(String message, String command) {
-            String[] parts = message.trim().split(" ", 3);
-            if (!parts[0].equals(command) || parts.length != 3 || !nameExists(parts[1].trim())) {
-                sendMessage("Fail. Use: " + command + " [username] [message]");
-                return;
-            }
-            String name = parts[1].trim();
-            String privateMessage = parts[2].trim();
-            server.msgClientToClient(name, username + " : " + privateMessage);
-    }
-
-    public void changeName(String message, String command) {
-        String[] parts = message.replaceAll("\\s{2,}", " ").split(" ");
-        if (!parts[0].equals(command) || parts.length != 2) {
-            sendMessage("Fail. Use: " + command + " [name]");
+        String[] parts = message.trim().split(" ", 3);
+        if (!parts[0].equals(command) || parts.length != 3) {
+            sendMessage("Fail. Use: " + command + " [username] [message]");
             return;
         }
-        String newName = parts[1].trim();
-        if (newName.isEmpty() || nameExists(newName)) {
-            sendMessage("Fail. Use: " + command + " [name]");
-            return;
-        }
-        setUsername(newName);
-        sendMessage("Success");
-    }
-
-    public boolean nameExists(String username) {
-        for (ClientHandler client : server.getClients()) {
-            if (client.getUsername().equals(username)) {
-                return true;
-            }
-        }
-        return false;
+        String name = parts[1].trim();
+        String privateMessage = parts[2].trim();
+        server.msgClientToClient(name, username + " : " + privateMessage);
     }
 }
