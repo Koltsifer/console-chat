@@ -10,6 +10,10 @@ public class Server {
     private int port;
     private List<ClientHandler> clients;
 
+    public List<ClientHandler> getClients() {
+        return clients;
+    }
+
     public Server(int port) {
         this.port = port;
         clients = new ArrayList<>();
@@ -38,6 +42,15 @@ public class Server {
     public synchronized void broadcastMessage(String message) {
         for (ClientHandler client : clients) {
             client.sendMessage(message);
+        }
+    }
+
+    public synchronized void msgClientToClient(String name, String message) {
+        for (ClientHandler client : clients) {
+            if (client.getUsername().equals(name)) {
+                client.sendMessage(message);
+                break;
+            }
         }
     }
 }
