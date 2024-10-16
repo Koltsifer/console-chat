@@ -25,6 +25,10 @@ public class Client {
                         if (message.startsWith("/exitok")) {
                             break;
                         }
+                        if (message.startsWith("/exitonkick")) {
+                            disconnect();
+                            break;
+                        }
                         if (message.startsWith("/authok ")) {
                             System.out.println("Аутентификация прошла успешно с именем пользователя: "+
                                     message.split(" ")[1]);
